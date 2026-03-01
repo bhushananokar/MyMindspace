@@ -1,0 +1,21 @@
+# Component 4: Feature Engineering Pipeline Requirements
+
+# Core dependencies
+numpy>=1.21.0
+pydantic>=1.8.0
+PyYAML>=5.4.0
+
+# Performance monitoring
+psutil>=5.8.0
+
+# Testing
+pytest>=6.2.0
+pytest-cov>=2.12.0
+
+# Development
+black>=21.0.0
+flake8>=3.9.0
+
+# Optional: For advanced features
+scikit-learn>=1.0.0  # For advanced normalization
+scipy>=1.7.0  # For statistical functions

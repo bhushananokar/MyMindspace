@@ -1,0 +1,31 @@
+# Python
+/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+*.sqlite3
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# Backups
+backups/
+temp_backups/
+
+# Exported data
+*.json
+*.csv
+
+# VS Code
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_write_permission.tmp

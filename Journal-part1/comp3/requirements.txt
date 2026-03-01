@@ -1,0 +1,25 @@
+# Core NLP and ML libraries
+spacy>=3.7.0
+sentence-transformers>=2.2.0,<3.0.0
+scikit-learn>=1.3.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Date and time parsing
+python-dateutil>=2.8.0
+
+# Additional utilities
+pyyaml>=6.0
+typing-extensions>=4.5.0
+
+# Fix for sentence-transformers compatibility
+huggingface_hub>=0.15.0,<0.20.0
+transformers>=4.30.0,<5.0.0
+torch>=1.9.0
+
+# For spaCy model
+# Run: python -m spacy download en_core_web_lg
+
+# Optional: GPU support for sentence-transformers
+# torch>=2.0.0
+# transformers>=4.30.0

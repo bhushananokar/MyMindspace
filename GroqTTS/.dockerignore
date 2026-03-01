@@ -1,0 +1,82 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+build
+*.egg-info
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis
+.pytest_cache
+
+# Virtual environments
+.env
+.venv
+env
+venv
+ENV
+env.bak
+venv.bak
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+*.ogg
+
+# Documentation drafts
+*.md.bak
+*.md.tmp
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Node modules (if any)
+node_modules/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Testing
+test_*
+*_test.py
+tests/
+
+# Development
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Backup files
+*.bak
+*~

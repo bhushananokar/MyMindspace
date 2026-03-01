@@ -1,0 +1,117 @@
+# Component 4: Feature Engineering Pipeline Configuration
+
+component4:
+  description: "Feature Engineering Pipeline for Component 4"
+  version: "4.0"
+  
+  # Quality Control Settings
+  quality_control:
+    enable_quality_control: true
+    auto_repair_features: true
+    min_completeness_threshold: 0.8
+    max_outlier_ratio: 0.1
+    consistency_threshold: 0.95
+  
+  # Feature Normalization Settings
+  normalization:
+    normalization_method: "minmax"  # Options: minmax, zscore, robust
+    normalize_temporal: true
+    normalize_emotional: true
+    normalize_semantic: true
+    normalize_user: true
+  
+  # Feature Engineering Settings
+  feature_engineering:
+    # Temporal features
+    smooth_cyclical_features: true
+    cyclical_smoothing_factor: 0.1
+    
+    # Emotional features
+    balance_emotions: true
+    emotional_balancing_factor: 0.1
+    
+    # Semantic features
+    enhance_semantic_features: true
+    smooth_topic_distribution: true
+    enhance_complexity_measures: true
+    
+    # User features
+    scale_user_patterns: true
+    user_scaling_factor: 1.0
+  
+  # Performance Settings
+  performance:
+    max_processing_time_ms: 50.0
+    enable_batch_processing: true
+    cache_features: false
+    batch_size: 32
+  
+  # Logging Settings
+  logging:
+    log_level: "INFO"
+    log_feature_stats: false
+    log_processing_times: true
+    log_quality_issues: true
+  
+  # Advanced Settings
+  advanced:
+    # Feature selection (enable/disable feature types)
+    feature_selection:
+      temporal: true
+      emotional: true
+      semantic: true
+      user: true
+    
+    # Custom weights for feature types
+    custom_weights:
+      temporal: 1.0
+      emotional: 1.0
+      semantic: 1.0
+      user: 1.0
+    
+    # Validation settings
+    validation:
+      strict_validation: false
+      repair_invalid_features: true
+      log_validation_details: false
+
+# Vector Database Integration Settings (Optional)
+vector_db:
+  enabled: false
+  collection_name: "memory_embeddings"
+  dimension: 90
+  distance_metric: "cosine"
+  index_type: "IVF_FLAT"
+  
+  # Metadata fields to include
+  metadata_fields:
+    - "memory_type"
+    - "importance_score"
+    - "emotional_significance"
+    - "temporal_relevance"
+    - "user_id"
+    - "entry_timestamp"
+    - "retrieval_triggers"
+
+# Memory Gate Settings (for LSTM integration)
+memory_gates:
+  enabled: true
+  gate_types:
+    - "forget_gate"
+    - "input_gate"
+    - "output_gate"
+    - "cell_gate"
+  
+  # Gate score calculation weights
+  gate_weights:
+    novelty: 0.3
+    importance: 0.3
+    emotional_intensity: 0.2
+    complexity: 0.2
+
+# Development Settings
+development:
+  debug_mode: false
+  save_intermediate_features: false
+  feature_inspection: false
+  performance_profiling: false

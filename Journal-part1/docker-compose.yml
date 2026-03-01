@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  journal-ai-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: journal-ai-pipeline
+    restart: unless-stopped
+    
+    # Environment variables (use .env file)
+    env_file:
+      - .env
+    
+    # Port mapping (if running as API)
+    ports:
+      - "8000:8000"
+    
+    # Volume mounts for persistence
+    volumes:
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      - ./models:/app/models
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "from integration_main import AstraDBIntegrator; print('OK')"]
+      interval: 30s
+      timeout: 10s  
+      retries: 3
+      start_period: 60s
+    
+    # Network
+    networks:
+      - journal-ai-network
+
+networks:
+  journal-ai-network:
+    driver: bridge
+
+volumes:
+  models-data:
+  logs-data:
+  backups-data:

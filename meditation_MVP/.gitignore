@@ -1,0 +1,14 @@
+
+# Firebase MVP additions
+firebase_config.json
+.env
+temp/
+logs/
+__pycache__/
+*.pyc
+
+# Firebase cache
+.firebase/
+firebase-debug.log
+firestore-debug.log
+venv/

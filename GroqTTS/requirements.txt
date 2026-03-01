@@ -1,0 +1,45 @@
+# Core TTS Dependencies (existing)
+torch
+transformers
+huggingface_hub
+snac
+soundfile
+librosa
+ipython
+ipywidgets
+numpy
+
+# FastAPI and WebSocket Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+
+# Groq TTS Integration
+groq>=0.4.1
+
+# Data Validation and Serialization
+pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# Async File Operations
+aiofiles>=23.0.0
+
+# Configuration Management
+python-dotenv>=1.0.0
+
+# Development and Testing (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+
+# Code Quality (optional)
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Production Deployment (optional)
+gunicorn>=21.0.0
+
+# Optional: Queue System for Future Scaling
+redis>=5.0.0
+celery[redis]>=5.3.0

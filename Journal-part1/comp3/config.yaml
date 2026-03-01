@@ -1,0 +1,38 @@
+# Component 3: NER, Temporal & Event Extraction Configuration
+
+models:
+  spacy_model: "en_core_web_lg"
+  primary_embedding_model: "all-mpnet-base-v2"
+  lightweight_embedding_model: "all-MiniLM-L6-v2"
+  
+performance:
+  max_processing_time_ms: 300
+  embedding_cache_size: 10000
+  batch_size: 32
+  
+entity_extraction:
+  person_confidence_threshold: 0.7
+  location_confidence_threshold: 0.6
+  organization_confidence_threshold: 0.6
+  max_entities_per_type: 20
+  
+event_extraction:
+  confidence_threshold: 0.5
+  max_future_days: 365
+  event_importance_threshold: 0.3
+  followup_generation: true
+  
+embedding_settings:
+  cache_enabled: true
+  similarity_threshold: 0.8
+  max_text_length: 5000
+  
+temporal_analysis:
+  anomaly_detection: true
+  pattern_analysis: true
+  cyclical_encoding: true
+  
+database:
+  event_storage_enabled: true
+  retention_days: 730
+  encryption_enabled: true

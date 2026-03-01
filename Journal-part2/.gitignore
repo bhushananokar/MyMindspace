@@ -1,0 +1,41 @@
+# Environment & secrets
+.env
+*.env
+!env.example
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Logs
+logs/
+*.log
+
+# Data & model outputs (potentially large/sensitive)
+*.json
+!sample_input.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
