@@ -14,6 +14,9 @@ from datetime import datetime, timedelta
 import re
 import logging
 from collections import Counter
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import recommendation engine
 from recommendations import RecommendationEngine
@@ -51,7 +54,7 @@ async def options_handler(path: str):
     )
 
 # Configure Gemini
-genai.configure(api_key="YOUR_GEMINI_API_KEY_HERE")  # Replace with your API key
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Database setup
 DATABASE_PATH = "therapy.db"
@@ -221,7 +224,7 @@ class RecommendationRequest(BaseModel):
 # AI Therapy System Class
 class InteractiveTherapyAI:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-flash-latest')  # Use the latest Gemini model
         
         # Assessment templates
         self.assessments = {
@@ -2090,7 +2093,7 @@ if __name__ == "__main__":
     print("- Real-time WebSocket support")
     print("- Comprehensive analytics")
     print("\n📖 Set your GEMINI_API_KEY in the code before starting!")
-    print("🚀 Starting server on http://localhost:8000")
-    print("📊 API Docs: http://localhost:8000/docs")
-    
-    uvicorn.run(app, host="0.0.0.0", port=8000)    
+    print("🚀 Starting server on http://localhost:8002")
+    print("📊 API Docs: http://localhost:8002/docs")
+
+    uvicorn.run(app, host="0.0.0.0", port=8002)    

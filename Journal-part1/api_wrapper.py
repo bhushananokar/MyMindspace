@@ -2,6 +2,7 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware  # Add this import
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 import logging
 from integration_main import AstraDBIntegrator
@@ -27,8 +28,8 @@ class JournalProcessRequest(BaseModel):
 class JournalProcessResponse(BaseModel):
     success: bool
     message: str
-    processing_time_ms: float = None
-    entry_id: str = None
+    processing_time_ms: Optional[float] = None
+    entry_id: Optional[str] = None
 
 class UserHistoryContextRequest(BaseModel):
     user_id: str
@@ -36,7 +37,7 @@ class UserHistoryContextRequest(BaseModel):
 class UserHistoryContextResponse(BaseModel):
     success: bool
     message: str
-    user_history_context: dict = None
+    user_history_context: Optional[dict] = None
 
 # Initialize your integrator
 integrator = AstraDBIntegrator()
@@ -123,4 +124,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

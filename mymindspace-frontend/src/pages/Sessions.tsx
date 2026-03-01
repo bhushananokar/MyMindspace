@@ -44,7 +44,7 @@ function useVoiceRecorder(onTranscript: (text: string) => void) {
       mr.ondataavailable = (e) => chunks.current.push(e.data);
       mr.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunks.current, { type: 'audio/wav' });
+        const blob = new Blob(chunks.current, { type: mr.mimeType });
         if (blob.size < 100) return;
         setTranscribing(true);
         try {
@@ -94,6 +94,19 @@ export default function Sessions() {
   const [error, setError] = useState('');
   const cancelTtsRef = useRef<(() => void) | null>(null);
 
+  // Live conversation mode
+  const [liveMode, setLiveMode] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<'idle' | 'listening' | 'thinking'>('idle');
+  const [readyToSpeak, setReadyToSpeak] = useState(false);
+  const liveModeRef = useRef(false);
+  const liveRecorderRef = useRef<MediaRecorder | null>(null);
+  const liveAudioCtxRef = useRef<AudioContext | null>(null);
+  // Stable refs to avoid stale closures in live mode callbacks
+  const sessionInfoRef = useRef<SessionStartResponse | null>(null);
+  const completedRef = useRef(false);
+  const startLiveRef = useRef<() => void>(() => {});
+  const playTTSRef = useRef<(text: string) => void>(() => {});
+
   // WebSocket ref for therapy session
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -103,6 +116,9 @@ export default function Sessions() {
     return () => {
       wsRef.current?.close();
       cancelTtsRef.current?.();
+      liveModeRef.current = false;
+      if (liveRecorderRef.current?.state === 'recording') liveRecorderRef.current.stop();
+      liveAudioCtxRef.current?.close().catch(() => {});
     };
   }, []);
 
@@ -124,6 +140,11 @@ export default function Sessions() {
       setError('No patient account found. Please register first.');
       return;
     }
+    // Unlock browser audio context synchronously before any await
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      ctx.resume();
+    } catch {}
     setStarting(true);
     setError('');
     try {
@@ -186,7 +207,7 @@ export default function Sessions() {
   // ─── TTS ──────────────────────────────────────────────────────────────────
   const playTTS = (text: string) => {
     cancelTtsRef.current?.();
-    cancelTtsRef.current = streamTTS(text, 'Fritz-PlayAI', (state) =>
+    cancelTtsRef.current = streamTTS(text, 'autumn', (state) =>
       setTtsState(state as any),
     );
   };
@@ -195,6 +216,107 @@ export default function Sessions() {
     cancelTtsRef.current?.();
     setTtsState('idle');
   };
+
+  // Keep stable refs up-to-date each render
+  sessionInfoRef.current = sessionInfo;
+  completedRef.current = completed;
+  playTTSRef.current = playTTS;
+
+  // ─── Push-to-talk live recording ─────────────────────────────────────────
+  const startLivePTT = () => {
+    if (!liveModeRef.current || completedRef.current) return;
+    if (liveRecorderRef.current?.state === 'recording') return;
+    // Stop Dr. Maya before activating mic (avoids getUserMedia audio interference)
+    cancelTtsRef.current?.();
+    setTtsState('idle');
+    setReadyToSpeak(false);
+    setLiveStatus('listening');
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      if (!liveModeRef.current) { stream.getTracks().forEach((t) => t.stop()); return; }
+      const chunks: Blob[] = [];
+      const mr = new MediaRecorder(stream);
+      liveRecorderRef.current = mr;
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        liveRecorderRef.current = null;
+        if (!liveModeRef.current) return;
+        const blob = new Blob(chunks, { type: mr.mimeType });
+        if (blob.size < 500) { setReadyToSpeak(true); setLiveStatus('idle'); return; }
+        setLiveStatus('thinking');
+        try {
+          const { transcript } = await sttApi.transcribe(blob);
+          if (transcript?.trim() && sessionInfoRef.current) {
+            const text = transcript.trim();
+            setMessages((prev) => [...prev, { role: 'user', text }]);
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ message: text }));
+            } else {
+              const res = await therapistApi.sendMessage(sessionInfoRef.current.session_id, text);
+              setMessages((prev) => [...prev, { role: 'ai', text: res.response, phase: res.phase }]);
+              setPhase(res.phase);
+              if (res.crisis_alert) setCrisisAlert(res.crisis_alert);
+              if (res.session_completed) { setCompleted(true); setLiveMode(false); liveModeRef.current = false; return; }
+              playTTSRef.current(res.response);
+            }
+          } else {
+            setReadyToSpeak(true); setLiveStatus('idle');
+          }
+        } catch { setReadyToSpeak(true); setLiveStatus('idle'); }
+      };
+      mr.start();
+    }).catch(() => setLiveStatus('idle'));
+  };
+
+  startLiveRef.current = startLivePTT;
+
+  const toggleLiveMode = () => {
+    const next = !liveMode;
+    liveModeRef.current = next;
+    setLiveMode(next);
+    if (next) {
+      try { new (window.AudioContext || (window as any).webkitAudioContext)().resume(); } catch {}
+      cancelTtsRef.current?.();
+      setTtsState('idle');
+      setLiveStatus('idle');
+      setReadyToSpeak(false);
+    } else {
+      if (liveRecorderRef.current?.state === 'recording') liveRecorderRef.current.stop();
+      liveAudioCtxRef.current?.close().catch(() => {});
+      liveAudioCtxRef.current = null;
+      setLiveStatus('idle');
+      setReadyToSpeak(false);
+    }
+  };
+
+  // After TTS finishes in live mode, mark AI as done and let user speak
+  useEffect(() => {
+    if (liveMode && (ttsState === 'done' || ttsState === 'error') && !completed) {
+      setReadyToSpeak(true);
+      setLiveStatus('idle');
+    }
+  }, [ttsState, liveMode, completed]);
+
+  // Spacebar push-to-talk: hold to record, release to send
+  useEffect(() => {
+    if (!liveMode) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat) return;
+      e.preventDefault();
+      startLiveRef.current();
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      if (liveRecorderRef.current?.state === 'recording') liveRecorderRef.current.stop();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [liveMode]);
 
   const phaseIndex = SESSION_PHASES.indexOf(phase);
   const isSpeaking = ttsState === 'playing' || ttsState === 'generating';
@@ -354,13 +476,29 @@ export default function Sessions() {
             </p>
           </div>
           <div className="flex gap-3 items-center">
-            {isSpeaking && (
+            {isSpeaking && !liveMode && (
               <button
                 onClick={stopTTS}
                 className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold"
               >
                 <span className="material-symbols-outlined text-sm">stop</span>
                 Stop Audio
+              </button>
+            )}
+            {!completed && (
+              <button
+                onClick={toggleLiveMode}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  liveMode
+                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                }`}
+                title="Toggle live conversation mode"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {liveMode ? 'radio_button_checked' : 'mic_external_on'}
+                </span>
+                {liveMode ? 'End Voice Mode' : 'Voice Mode'}
               </button>
             )}
           </div>
@@ -402,61 +540,90 @@ export default function Sessions() {
 
         {/* Input Area */}
         {!completed && (
-          <div className="p-6 border-t border-primary/10 bg-white/80">
-            {error && (
-              <p className="text-red-500 text-sm mb-3">{error}</p>
+          <div className="border-t border-primary/10 bg-white/80">
+            {liveMode ? (
+              /* ── Live voice mode overlay ── */
+              <div className="flex flex-col items-center justify-center gap-4 py-6 px-6">
+                <div className="relative flex items-center justify-center">
+                  {/* Pulse rings */}
+                  {liveStatus === 'listening' && (
+                    <>
+                      <div className="absolute w-24 h-24 rounded-full bg-red-400/20 animate-ping" />
+                      <div className="absolute w-16 h-16 rounded-full bg-red-400/30 animate-ping" style={{ animationDelay: '200ms' }} />
+                    </>
+                  )}
+                  {isSpeaking && (
+                    <>
+                      <div className="absolute w-24 h-24 rounded-full bg-primary/20 animate-ping" />
+                      <div className="absolute w-16 h-16 rounded-full bg-primary/30 animate-ping" style={{ animationDelay: '200ms' }} />
+                    </>
+                  )}
+                  <div className={`relative z-10 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                    liveStatus === 'listening' ? 'bg-red-500' : isSpeaking ? 'bg-primary' : 'bg-slate-300'
+                  }`}>
+                    <span className="material-symbols-outlined text-white text-2xl">
+                      {liveStatus === 'listening' ? 'mic' : isSpeaking ? 'volume_up' : 'hourglass_empty'}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-slate-600">
+                  {liveStatus === 'listening' && 'Listening…'}
+                  {liveStatus === 'thinking' && !isSpeaking && 'Dr. Maya is thinking…'}
+                  {isSpeaking && 'Dr. Maya is speaking…'}
+                  {liveStatus === 'idle' && readyToSpeak && 'Hold SPACE to speak…'}
+                </p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest">
+                  Hold SPACE to speak · release to send · click "End Voice Mode" to exit
+                </p>
+                {error && <p className="text-red-500 text-xs">{error}</p>}
+              </div>
+            ) : (
+              /* ── Normal text / hold-mic mode ── */
+              <div className="p-6">
+                {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+                {sttError && <p className="text-amber-500 text-sm mb-3">{sttError}</p>}
+                {transcribing && (
+                  <p className="text-primary text-sm mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined animate-spin text-sm">refresh</span>
+                    Transcribing…
+                  </p>
+                )}
+                <div className="flex items-center gap-4">
+                  <button
+                    onMouseDown={startRecording}
+                    onMouseUp={stopRecording}
+                    onTouchStart={startRecording}
+                    onTouchEnd={stopRecording}
+                    disabled={transcribing || sending}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                      recording ? 'bg-red-500 text-white shadow-lg shadow-red-400/40 scale-110' : 'bg-primary/10 text-primary hover:bg-primary/20'
+                    } disabled:opacity-50`}
+                    title="Hold to record voice"
+                  >
+                    <span className="material-symbols-outlined">{recording ? 'mic' : 'mic_none'}</span>
+                  </button>
+                  <input
+                    type="text"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                    placeholder={recording ? 'Release to transcribe…' : 'Type or hold mic to speak…'}
+                    disabled={sending || completed}
+                    className="flex-1 h-12 px-5 rounded-full border-2 border-primary/20 bg-white text-slate-800 focus:outline-none focus:border-primary transition-all disabled:opacity-60"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!inputText.trim() || sending || completed}
+                    className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-all disabled:opacity-50 flex-shrink-0"
+                  >
+                    <span className="material-symbols-outlined">send</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 text-center mt-2 uppercase tracking-widest">
+                  Hold mic button to speak · Press Enter or → to send
+                </p>
+              </div>
             )}
-            {sttError && (
-              <p className="text-amber-500 text-sm mb-3">{sttError}</p>
-            )}
-            {transcribing && (
-              <p className="text-primary text-sm mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined animate-spin text-sm">refresh</span>
-                Transcribing…
-              </p>
-            )}
-
-            <div className="flex items-center gap-4">
-              {/* Mic button */}
-              <button
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                disabled={transcribing || sending}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-                  recording
-                    ? 'bg-red-500 text-white shadow-lg shadow-red-400/40 scale-110'
-                    : 'bg-primary/10 text-primary hover:bg-primary/20'
-                } disabled:opacity-50`}
-                title="Hold to record voice"
-              >
-                <span className="material-symbols-outlined">{recording ? 'mic' : 'mic_none'}</span>
-              </button>
-
-              {/* Text input */}
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                placeholder={recording ? 'Release to transcribe…' : 'Type or hold mic to speak…'}
-                disabled={sending || completed}
-                className="flex-1 h-12 px-5 rounded-full border-2 border-primary/20 bg-white text-slate-800 focus:outline-none focus:border-primary transition-all disabled:opacity-60"
-              />
-
-              {/* Send button */}
-              <button
-                onClick={sendMessage}
-                disabled={!inputText.trim() || sending || completed}
-                className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-all disabled:opacity-50 flex-shrink-0"
-              >
-                <span className="material-symbols-outlined">send</span>
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-400 text-center mt-2 uppercase tracking-widest">
-              Hold mic button to speak · Press Enter or → to send
-            </p>
           </div>
         )}
 

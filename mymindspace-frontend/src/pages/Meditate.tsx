@@ -46,7 +46,7 @@ export default function Meditate() {
     try {
       const res = await meditationApi.generateScript(type, user.meditationUserId, duration);
       setScript(res);
-      cancelTts.current = streamTTS(res.script, 'Celeste-PlayAI', (s) => setTtsStatus(s as TtsStatus));
+      cancelTts.current = streamTTS(res.script, 'hannah', (s) => setTtsStatus(s as TtsStatus));
     } catch (err: any) {
       setError((err as any).message ?? 'Script generation failed.');
     } finally { setLoadingScript(false); }
@@ -188,7 +188,7 @@ export default function Meditate() {
                 </button>
               </div>
               <div className="text-xs text-center text-slate-500 capitalize">
-                {script.meditation_type.replace(/_/g, ' ')} · {script.duration_minutes} min · {ttsStatus}
+                {script.meditation_type.replace(/_/g, ' ')} ï¿½ {script.duration_minutes} min ï¿½ {ttsStatus}
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 px-4">

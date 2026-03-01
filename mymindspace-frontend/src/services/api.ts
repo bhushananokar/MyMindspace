@@ -7,6 +7,7 @@ export const TTS_WS = import.meta.env.VITE_TTS_WS_URL ?? 'ws://localhost:8003';
 export const STT_HTTP = import.meta.env.VITE_STT_API_URL ?? 'http://localhost:8004';
 export const MEDITATION_HTTP = import.meta.env.VITE_MEDITATION_API_URL ?? 'http://localhost:8000';
 export const JOURNAL_HTTP = import.meta.env.VITE_JOURNAL_PROCESSING_API_URL ?? 'http://localhost:8001';
+export const GEMINI_ENGINE_HTTP = import.meta.env.VITE_GEMINI_ENGINE_URL ?? 'http://localhost:8007';
 
 // ─── Generic fetch helper ─────────────────────────────────────────────────────
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
@@ -221,7 +222,8 @@ export const sttApi = {
 
   transcribe: (audioBlob: Blob): Promise<TranscribeResponse> => {
     const formData = new FormData();
-    formData.append('file', audioBlob, 'recording.wav');
+    const ext = audioBlob.type.includes('mp4') ? 'mp4' : audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
+    formData.append('file', audioBlob, `recording.${ext}`);
     return apiFetch<TranscribeResponse>(`${STT_HTTP}/transcribe`, {
       method: 'POST',
       body: formData,
@@ -303,8 +305,31 @@ export const journalApi = {
 
   getUserHistory: (userId: string) =>
     apiFetch<{ success: boolean; message: string; user_history_context: UserHistoryContext | null }>(
-      `${JOURNAL_HTTP}/get-user-history?user_id=${encodeURIComponent(userId)}`,
+      `${JOURNAL_HTTP}/user-history-context/${encodeURIComponent(userId)}`,
     ),
+};
+
+// ─── Gemini Engine API (Journal-part2) ───────────────────────────────────────
+export interface GeminiChatResponse {
+  response_id: string;
+  conversation_id: string;
+  enhanced_response: string;
+  processing_time_ms: number;
+  follow_up_suggestions: string[] | null;
+  proactive_suggestions: string[] | null;
+}
+
+export const geminiEngineApi = {
+  chat: (userId: string, message: string, conversationId: string) =>
+    apiFetch<GeminiChatResponse>(`${GEMINI_ENGINE_HTTP}/conversation`, {
+      method: 'POST',
+      ...json({
+        user_id: userId,
+        user_message: message,
+        conversation_id: conversationId,
+        include_analysis: true,
+      }),
+    }),
 };
 
 // ─── TTS WebSocket helper ─────────────────────────────────────────────────────
@@ -312,7 +337,7 @@ export const journalApi = {
  *  Returns a cancel function. onDone is called when all chunks have played. */
 export function streamTTS(
   text: string,
-  voice = 'Fritz-PlayAI',
+  voice = 'autumn',
   onStateChange?: (state: 'connecting' | 'generating' | 'playing' | 'done' | 'error') => void,
 ): () => void {
   let cancelled = false;
@@ -329,7 +354,7 @@ export function streamTTS(
     isPlaying = true;
     const audio = audioQueue.shift()!;
     audio.onended = playNext;
-    audio.play().catch(() => playNext());
+    audio.play().catch((err) => { console.error('TTS audio play error:', err); playNext(); });
   }
 
   function queueChunk(base64: string) {

@@ -18,7 +18,11 @@ interface UserContextValue {
 
 const STORAGE_KEY = 'mymindspace_user';
 
-const defaultUser: AppUser = { patientId: null, meditationUserId: null, name: '' };
+const defaultUser: AppUser = {
+  patientId: 1,
+  meditationUserId: '3ec5376b-16ee-418a-b6cb-6604dbcb2277',
+  name: 'Bhushan',
+};
 
 const UserContext = createContext<UserContextValue>({
   user: defaultUser,

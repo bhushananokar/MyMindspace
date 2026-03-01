@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider } from './context/UserContext';
-import Welcome from './pages/Welcome';
 import Dashboard from './pages/Dashboard';
 import Sessions from './pages/Sessions';
 import Meditate from './pages/Meditate';
@@ -17,7 +16,7 @@ export default function App() {
     <UserProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Welcome />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/meditate" element={<Meditate />} />

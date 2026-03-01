@@ -116,14 +116,13 @@ def main():
 Meditation Type: {meditation_type}
 Instructions: {meditation_instruction}
 
-Please provide a script that is:
-- Easy to follow and suitable for a 3-4 minute duration
-- Written in a calm, soothing tone suitable for text-to-speech
-- Includes natural pauses marked with [pause] for TTS timing
-- Has clear guidance for breathing and body awareness
-- Ends with a gentle return to awareness
-
-Format as spoken text that will be read aloud by a TTS system."""
+Requirements:
+- Begin IMMEDIATELY with the meditation itself — no title, no introduction, no explanation of what type of meditation it is, no preamble whatsoever
+- Calm, soothing tone
+- Natural pauses marked with [pause] for TTS timing
+- Clear guidance for breathing and body awareness
+- Gentle return to awareness at the end
+- Output ONLY the spoken meditation words — no headers, labels, notes, or meta-commentary of any kind"""
             
             print("Calling Gemini API...")
             

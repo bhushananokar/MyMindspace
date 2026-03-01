@@ -258,13 +258,13 @@ Meditation Type: {meditation_type}
 Instructions: {instructions}
 
 Requirements:
-- Calm, soothing tone suitable for text-to-speech
+- Begin IMMEDIATELY with the meditation itself — no title, no introduction, no explanation of what type of meditation it is, no preamble whatsoever
+- Calm, soothing tone
 - Natural pauses marked with [pause] for TTS timing
 - Clear guidance for breathing and body awareness
 - Gentle return to awareness at the end
 - Approximately {duration} minutes when spoken
-
-Format as spoken text for TTS system."""
+- Output ONLY the spoken meditation words — no headers, labels, notes, or meta-commentary of any kind"""
 
         response = self.gemini_model.generate_content(prompt)
         return response.text
