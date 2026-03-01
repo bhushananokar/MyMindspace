@@ -216,4 +216,4 @@ Our architecture is composed of specialized microservices across multiple reposi
 *MyMindSpace is a clinical support tool. It is not a substitute for professional mental health care.*  
 *If you or someone you know is in crisis, please contact iCall (+91-9152987821) or the Vandrevala Foundation Helpline (1860-2662-345).*
 
-##[Proof of content Documentation](https://docs.google.com/document/d/1IDIym4GSmqF1qp7Lgfs-uC_N3VooFW1_f2QXUhn5PRM/edit?usp=sharing) 
+## [Proof of content Documentation](https://docs.google.com/document/d/1IDIym4GSmqF1qp7Lgfs-uC_N3VooFW1_f2QXUhn5PRM/edit?usp=sharing) 
