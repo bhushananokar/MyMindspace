@@ -341,23 +341,35 @@ export default function Sessions() {
             </div>
           )}
           <div className="flex flex-col gap-3 w-full">
+            {/* ── Gemini Live (flagship) ── */}
+            <Link
+              to="/live-session"
+              className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 text-white text-lg font-bold shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] transition-all"
+            >
+              <span className="material-symbols-outlined text-xl">bolt</span>
+              Try Dr. Maya Live
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold tracking-wide">Gemini Live</span>
+            </Link>
+
+            {/* ── Classic text session ── */}
             <button
               onClick={startSession}
               disabled={starting || !user.patientId}
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-primary text-white text-lg font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-60"
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-primary/10 border border-primary/30 text-primary text-base font-semibold hover:bg-primary/20 transition-all disabled:opacity-60"
             >
               {starting ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin">refresh</span>
+                  <span className="material-symbols-outlined animate-spin text-sm">refresh</span>
                   Starting session…
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined">play_arrow</span>
-                  Start Session
+                  <span className="material-symbols-outlined text-sm">chat</span>
+                  Text Session (Classic)
                 </>
               )}
             </button>
+
             <Link
               to="/dashboard"
               className="text-sm text-primary/70 hover:text-primary transition-colors text-center"

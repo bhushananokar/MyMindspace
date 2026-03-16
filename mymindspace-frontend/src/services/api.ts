@@ -8,6 +8,7 @@ export const STT_HTTP = import.meta.env.VITE_STT_API_URL ?? 'http://localhost:80
 export const MEDITATION_HTTP = import.meta.env.VITE_MEDITATION_API_URL ?? 'http://localhost:8000';
 export const JOURNAL_HTTP = import.meta.env.VITE_JOURNAL_PROCESSING_API_URL ?? 'http://localhost:8001';
 export const GEMINI_ENGINE_HTTP = import.meta.env.VITE_GEMINI_ENGINE_URL ?? 'http://localhost:8007';
+export const GEMINI_LIVE_WS   = import.meta.env.VITE_GEMINI_LIVE_WS_URL ?? 'ws://localhost:8010';
 
 // ─── Generic fetch helper ─────────────────────────────────────────────────────
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {

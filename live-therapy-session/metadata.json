@@ -1,0 +1,7 @@
+{
+  "name": "Live Therapy Session",
+  "description": "A live voice therapy session using Gemini Live API.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
