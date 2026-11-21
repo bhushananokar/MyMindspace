@@ -17,7 +17,7 @@ import os
 # =============================================================================
 # API KEY PLACEHOLDER - Insert your Gemini API key here
 # =============================================================================
-GEMINI_API_KEY = "AIzaSyBkhEgCoFQU8IAeIhHanSff76tdnGXJwu4"  # Replace with: "your_gemini_api_key_here"
+GEMINI_API_KEY = ""  # Replace with: "your_gemini_api_key_here"
 # =============================================================================
 
 try:
