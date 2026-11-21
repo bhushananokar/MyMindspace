@@ -37,7 +37,7 @@ class GeminiClient:
     def __init__(self):
         """Initialize Gemini client"""
         self.logger = get_logger("gemini_client")
-        self.api_key = "AIzaSyD2WlV2eqqGMvrciq3qh5-F823L6kJlDyM"
+        self.api_key = ""
         self.model_name = "gemini-2.5-flash"
         
         # Initialize the Gemini client
